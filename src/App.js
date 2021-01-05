@@ -2,7 +2,7 @@ import './App.css';
 import classNames from 'classnames';
 import { useEffect, Fragment } from 'react';
 import { useSelector, useDispatch, } from 'react-redux';
-import { cellSelected } from './store';
+import { shot } from './store';
 
 function Cell({ row, column, index }) {
   let field = useSelector(state => state.game.fields[index]);
@@ -21,7 +21,7 @@ function Cell({ row, column, index }) {
   return (
     <div className={className} onClick={() => {
       if (index === 1) {
-        dispatch(cellSelected({ x: cell.x, y: cell.y, fieldIndex: index }));
+        dispatch(shot({ x: cell.x, y: cell.y, fieldIndex: index }));
       }
     }}></div>
   );
@@ -33,7 +33,8 @@ function Bot() {
 
   useEffect(() => {
     let interval = setInterval(() => {
-      dispatch(cellSelected({ x: nextMove.x, y: nextMove.y, fieldIndex: 0 }));
+      if (!!nextMove)
+        dispatch(shot({ x: nextMove.x, y: nextMove.y, fieldIndex: 0 }));
     }, 500);
     return () => clearInterval(interval);
   }, [dispatch, nextMove]);
@@ -49,41 +50,11 @@ function Row({ index, children }) {
   );
 }
 
-function Cell2({ cell }) {
-  let className = classNames('cell', {
-    'cell-ship': cell.type === 'O',
-    'cell-killed': cell.type === 'K',
-  });
-
-  return (
-    <div className={className}></div>
-  );
-}
-
-function Ship({ fieldIndex, shipIndex }) {
-  let ship = useSelector(state => state.game.ships[fieldIndex][shipIndex].ship).map((cell, i) => (<Cell2 key={i} cell={cell}></Cell2>));
-  return (<Row>{ship}</Row>);
-}
-
-function Ships({ index }) {
-  let ships = [];
-
-  for (let i = 0; i < 10; i++)
-    ships.push(<Ship key={i} fieldIndex={index} shipIndex={i}></Ship>)
-
-  return (<div>{ships}</div>);
-}
-
 function Info() {
-
-  let opponentAvailableMoves = useSelector(state => state.game.availableMoves[0]);
-  let availableMoves = useSelector(state => state.game.availableMoves[1]);
   let nextPlayer = useSelector(state => state.game.nextPlayer);
 
   return (
     <Fragment>
-      <Row><span>Your available moves: {availableMoves.length}</span></Row>
-      <Row><span>Opponent available moves: {opponentAvailableMoves.length}</span></Row>
       {nextPlayer === 1 && <Row><span>Your turn</span></Row>}
       {nextPlayer !== 1 && <Row><span>Opponent turn</span></Row>}
     </Fragment>
@@ -109,7 +80,6 @@ function Field({ index }) {
   return (
     <div className={className}>
       {rows}
-      <Ships index={index}></Ships>
     </div>
   );
 }

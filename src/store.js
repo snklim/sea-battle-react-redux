@@ -1,27 +1,24 @@
 import { createSlice, configureStore } from '@reduxjs/toolkit';
 
+
+let availableMoves = [[], []];
+let nextPossibleMoves = [[], []];
+let prevSuccessfullMoves = [[], []];
+let fields = [[], []];
+let ships = [[], []];
+
 const initialState = {
-    fields: [],
-    ships: [],
+    fields: [[], []],
     nextPlayer: 1,
-    availableMoves: [[], []],
-    nextPossibleMoves: [[], []],
-    prevSuccessfullMoves: [[], []],
     nextMove: [null, null],
 }
 
-initialState.fields.push([]);
-initialState.fields.push([]);
-
-initialState.ships.push([]);
-initialState.ships.push([]);
-
 for (let i = 0; i < 10; i++) {
-    initialState.fields[0].push([]);
-    initialState.fields[1].push([]);
+    fields[0].push([]);
+    fields[1].push([]);
     for (let j = 0; j < 10; j++) {
-        initialState.fields[0][i].push({ type: ' ', x: i, y: j });
-        initialState.fields[1][i].push({ type: ' ', x: i, y: j });
+        fields[0][i].push({ type: ' ', x: i, y: j });
+        fields[1][i].push({ type: ' ', x: i, y: j });
     }
 }
 
@@ -111,34 +108,34 @@ function placeShip(field, length, ships) {
         console.warn("Ship was not placed", length);
 }
 
-placeShip(initialState.fields[0], 4, initialState.ships[0]);
+placeShip(fields[0], 4, ships[0]);
 
-placeShip(initialState.fields[0], 3, initialState.ships[0]);
-placeShip(initialState.fields[0], 3, initialState.ships[0]);
+placeShip(fields[0], 3, ships[0]);
+placeShip(fields[0], 3, ships[0]);
 
-placeShip(initialState.fields[0], 2, initialState.ships[0]);
-placeShip(initialState.fields[0], 2, initialState.ships[0]);
-placeShip(initialState.fields[0], 2, initialState.ships[0]);
+placeShip(fields[0], 2, ships[0]);
+placeShip(fields[0], 2, ships[0]);
+placeShip(fields[0], 2, ships[0]);
 
-placeShip(initialState.fields[0], 1, initialState.ships[0]);
-placeShip(initialState.fields[0], 1, initialState.ships[0]);
-placeShip(initialState.fields[0], 1, initialState.ships[0]);
-placeShip(initialState.fields[0], 1, initialState.ships[0]);
+placeShip(fields[0], 1, ships[0]);
+placeShip(fields[0], 1, ships[0]);
+placeShip(fields[0], 1, ships[0]);
+placeShip(fields[0], 1, ships[0]);
 
 
-placeShip(initialState.fields[1], 4, initialState.ships[1]);
+placeShip(fields[1], 4, ships[1]);
 
-placeShip(initialState.fields[1], 3, initialState.ships[1]);
-placeShip(initialState.fields[1], 3, initialState.ships[1]);
+placeShip(fields[1], 3, ships[1]);
+placeShip(fields[1], 3, ships[1]);
 
-placeShip(initialState.fields[1], 2, initialState.ships[1]);
-placeShip(initialState.fields[1], 2, initialState.ships[1]);
-placeShip(initialState.fields[1], 2, initialState.ships[1]);
+placeShip(fields[1], 2, ships[1]);
+placeShip(fields[1], 2, ships[1]);
+placeShip(fields[1], 2, ships[1]);
 
-placeShip(initialState.fields[1], 1, initialState.ships[1]);
-placeShip(initialState.fields[1], 1, initialState.ships[1]);
-placeShip(initialState.fields[1], 1, initialState.ships[1]);
-placeShip(initialState.fields[1], 1, initialState.ships[1]);
+placeShip(fields[1], 1, ships[1]);
+placeShip(fields[1], 1, ships[1]);
+placeShip(fields[1], 1, ships[1]);
+placeShip(fields[1], 1, ships[1]);
 
 function genBotMoves(moves) {
     for (let i = 0; i < 10; i++) {
@@ -148,62 +145,56 @@ function genBotMoves(moves) {
     }
 }
 
-genBotMoves(initialState.availableMoves[0]);
-genBotMoves(initialState.availableMoves[1]);
+genBotMoves(availableMoves[0]);
+genBotMoves(availableMoves[1]);
 
-function cellSelectedFn(state, action) {
-    let { x, y, fieldIndex } = action.payload;
+function shotFn({ x, y, fieldIndex, cells }) {
 
-    if (state.availableMoves[fieldIndex].findIndex(item => item.x === x && item.y === y) === -1) return;
+    if (availableMoves[fieldIndex].findIndex(item => item.x === x && item.y === y) === -1) return;
 
-    let field = state.fields[fieldIndex];
+    let field = fields[fieldIndex];
     let cell = field[x][y];
 
     let shipIndex = cell.type === 'O' ? cell.index : -1;
 
     if (cell.type === 'O') {
-        let shipLength = state.ships[fieldIndex][shipIndex].length - 1
+        let shipLength = ships[fieldIndex][shipIndex].length - 1
 
-        state.ships[fieldIndex][shipIndex].length = shipLength;
-        state.ships[fieldIndex][shipIndex].ship[shipLength].type = 'K';
+        ships[fieldIndex][shipIndex].length = shipLength;
+        ships[fieldIndex][shipIndex].ship[shipLength].type = 'K';
     }
 
-    state.nextPlayer = cell.type === 'O' ? fieldIndex : (fieldIndex + 1) % 2;
-
     cell.type = cell.type === 'O' ? 'K' : 'X';
+
+    cells.push(cell)
+
+    return cell.type === 'O' ? fieldIndex : (fieldIndex + 1) % 2;
 }
 
-function updateAvailableMovesFn(state, action) {
-    let { fieldIndex } = action.payload;
+function updateAvailableMovesFn({ fieldIndex }) {
+    let field = fields[fieldIndex];
 
-    let field = state.fields[fieldIndex];
-
-    let availableMoves = [];
+    availableMoves[fieldIndex] = [];
 
     for (let i = 0; i < field.length; i++) {
         for (let j = 0; j < field[i].length; j++) {
             if (field[i][j].type === ' ' || field[i][j].type === 'O') {
-                availableMoves.push({ x: i, y: j });
+                availableMoves[fieldIndex].push({ x: i, y: j });
             }
         }
     }
-
-    state.availableMoves[fieldIndex] = availableMoves;
 }
 
-function drawBorderFn(state, action) {
-    let { fieldIndex } = action.payload;
-    let field = state.fields[fieldIndex];
-    let ships = state.ships[fieldIndex];
-    let availableMoves = state.availableMoves[fieldIndex];
+function drawBorderFn({ fieldIndex, cells }) {
+    let field = fields[fieldIndex];
     let border = [];
 
-    for (let i = 0; i < ships.length; i++) {
-        if (ships[i].length === 0)
-            for (let j = 0; j < ships[i].border.length; j++) {
-                let availableMoveIndex = availableMoves.findIndex(item => item.x === ships[i].border[j].x && item.y === ships[i].border[j].y);
+    for (let i = 0; i < ships[fieldIndex].length; i++) {
+        if (ships[fieldIndex][i].length === 0)
+            for (let j = 0; j < ships[fieldIndex][i].border.length; j++) {
+                let availableMoveIndex = availableMoves[fieldIndex].findIndex(item => item.x === ships[fieldIndex][i].border[j].x && item.y === ships[fieldIndex][i].border[j].y);
                 if (availableMoveIndex !== -1) {
-                    border.push({ x: ships[i].border[j].x, y: ships[i].border[j].y, type: 'B' });
+                    border.push({ x: ships[fieldIndex][i].border[j].x, y: ships[fieldIndex][i].border[j].y, type: 'B' });
                 }
             }
     }
@@ -212,65 +203,55 @@ function drawBorderFn(state, action) {
         for (let i = 0; i < border.length; i++) {
             let cell = border[i];
             field[cell.x][cell.y].type = 'B';
+
+            cells.push(cell)
         }
 
-        state.prevSuccessfullMoves[fieldIndex] = [];
+        prevSuccessfullMoves[fieldIndex] = [];
     }
 }
 
-function generateNextMovesFn(state, action) {
-    let { x, y, fieldIndex } = action.payload;
-    let field = state.fields[fieldIndex];
+function generateNextMovesFn({ x, y, fieldIndex }) {
+    let field = fields[fieldIndex];
 
     if (field[x][y].type === 'K') {
-        let nextPossibleMoves = [0];
-        let prevSuccessfullMoves = [];
-        for (let i = 0; i < state.prevSuccessfullMoves[fieldIndex].length; i++) {
-            let item = state.prevSuccessfullMoves[fieldIndex][i];
-            prevSuccessfullMoves.push({ x: item.x, y: item.y });
-        }
 
-        for (let i = 0; i < state.nextPossibleMoves[fieldIndex].length; i++) {
-            nextPossibleMoves.push(state.nextPossibleMoves[fieldIndex][i]);
-        }
+        nextPossibleMoves[fieldIndex].push({ x: x - 1, y: y });
 
-        nextPossibleMoves.push({ x: x - 1, y: y });
+        nextPossibleMoves[fieldIndex].push({ x: x, y: y + 1 });
 
-        nextPossibleMoves.push({ x: x, y: y + 1 });
+        nextPossibleMoves[fieldIndex].push({ x: x + 1, y: y });
 
-        nextPossibleMoves.push({ x: x + 1, y: y });
+        nextPossibleMoves[fieldIndex].push({ x: x, y: y - 1 });
 
-        nextPossibleMoves.push({ x: x, y: y - 1 });
-
-        let availableMoves = state.availableMoves[fieldIndex];
-        for (let i = 0; i < nextPossibleMoves.length; i++) {
-            let nextPossibleMove = nextPossibleMoves[i];
-            if (availableMoves.findIndex(item => item.x === nextPossibleMove.x && item.y === nextPossibleMove.y) === -1) {
-                nextPossibleMoves.splice(i, 1);
+        for (let i = 0; i < nextPossibleMoves[fieldIndex].length; i++) {
+            let nextPossibleMove = nextPossibleMoves[fieldIndex][i];
+            if (availableMoves[fieldIndex].findIndex(item => item.x === nextPossibleMove.x && item.y === nextPossibleMove.y) === -1) {
+                nextPossibleMoves[fieldIndex].splice(i, 1);
                 i--;
             }
         }
 
-        prevSuccessfullMoves.push({ x, y });
+        prevSuccessfullMoves[fieldIndex].push({ x, y });
 
-        if (prevSuccessfullMoves.length > 1) {
-            let prevSuccessfullMove = prevSuccessfullMoves[prevSuccessfullMoves.length - 1];
-            let prevPrevSuccessfullMove = prevSuccessfullMoves[prevSuccessfullMoves.length - 2];
+        if (prevSuccessfullMoves[fieldIndex].length > 1) {
+            let prevSuccessfullMove = prevSuccessfullMoves[fieldIndex][prevSuccessfullMoves[fieldIndex].length - 1];
+            let prevPrevSuccessfullMove = prevSuccessfullMoves[fieldIndex][prevSuccessfullMoves[fieldIndex].length - 2];
 
             if ((Math.abs(prevPrevSuccessfullMove.x - prevSuccessfullMove.x) === 0 && Math.abs(prevPrevSuccessfullMove.y - prevSuccessfullMove.y) === 1) ||
                 (Math.abs(prevPrevSuccessfullMove.x - prevSuccessfullMove.x) === 1 && Math.abs(prevPrevSuccessfullMove.y - prevSuccessfullMove.y) === 0)) {
 
                 if (prevPrevSuccessfullMove.x === prevSuccessfullMove.x) {
-                    for (let i = 0; i < nextPossibleMoves.length; i++) {
-                        if (nextPossibleMoves[i].x !== prevPrevSuccessfullMove.x) {
-                            nextPossibleMoves.splice(i, 1);
+                    for (let i = 0; i < nextPossibleMoves[fieldIndex].length; i++) {
+                        if (nextPossibleMoves[fieldIndex][i].x !== prevPrevSuccessfullMove.x) {
+                            nextPossibleMoves[fieldIndex].splice(i, 1);
                             i--;
                         }
                     }
                 } else {
-                    for (let i = 0; i < nextPossibleMoves.length; i++) {
-                        if (nextPossibleMoves[i].y !== prevPrevSuccessfullMove.y) {
-                            nextPossibleMoves.splice(i, 1);
+                    for (let i = 0; i < nextPossibleMoves[fieldIndex].length; i++) {
+                        if (nextPossibleMoves[fieldIndex][i].y !== prevPrevSuccessfullMove.y) {
+                            nextPossibleMoves[fieldIndex].splice(i, 1);
                             i--;
                         }
                     }
@@ -278,59 +259,70 @@ function generateNextMovesFn(state, action) {
 
             }
         }
-
-        state.nextPossibleMoves[fieldIndex] = nextPossibleMoves;
-
-        state.prevSuccessfullMoves[fieldIndex] = prevSuccessfullMoves;
     }
 }
 
-function generateNextMoveFn(state, action) {
-    let { fieldIndex } = action.payload;
-    let availableMoves = state.availableMoves[fieldIndex]
-    let nextPossibleMoves = state.nextPossibleMoves[fieldIndex]
-    let next = Math.floor(Math.random() * availableMoves.length);
+function generateNextMoveFn({ fieldIndex }) {
+    let next = Math.floor(Math.random() * availableMoves[fieldIndex].length);
 
-    let move = availableMoves[next];
+    let move = availableMoves[fieldIndex][next];
 
-    if (nextPossibleMoves.length > 0) {
-        move = nextPossibleMoves[Math.floor(Math.random() * nextPossibleMoves.length)];
+    if (nextPossibleMoves[fieldIndex].length > 0) {
+        move = nextPossibleMoves[fieldIndex][Math.floor(Math.random() * nextPossibleMoves[fieldIndex].length)];
     }
 
-    state.nextMove[fieldIndex] = move
+    return move
 }
 
-function updateNextMovesFn(state, action) {
-    let { x, y, fieldIndex } = action.payload;
-    let nextPossibleMoves = state.nextPossibleMoves[fieldIndex];
-    let nextPossibleMoveIndex = nextPossibleMoves.findIndex(item => item.x === x && item.y === y);
-    nextPossibleMoves.splice(nextPossibleMoveIndex, 1);
-    state.nextPossibleMoves[fieldIndex] = nextPossibleMoves;
+function updateNextMovesFn({ x, y, fieldIndex }) {
+    let nextPossibleMoveIndex = nextPossibleMoves[fieldIndex].findIndex(item => item.x === x && item.y === y);
+    nextPossibleMoves[fieldIndex].splice(nextPossibleMoveIndex, 1);
 }
 
-generateNextMoveFn(initialState, { payload: { fieldIndex: 0 } });
-generateNextMoveFn(initialState, { payload: { fieldIndex: 1 } });
+initialState.nextMove[0] = generateNextMoveFn({ fieldIndex: 0 });
+initialState.nextMove[1] = generateNextMoveFn({ fieldIndex: 1 });
+
+for (let fieldIndex = 0; fieldIndex < 2; fieldIndex++) {
+    for (let i = 0; i < 10; i++) {
+        initialState.fields[fieldIndex].push([])
+
+        for (let j = 0; j < 10; j++) {
+            let { x, y, type } = fields[fieldIndex][i][j];
+            initialState.fields[fieldIndex][i].push({ x, y, type });
+        }
+    }
+}
 
 const gameSlice = createSlice({
     name: 'game',
     initialState,
     reducers: {
-        cellSelected(state, action) {
+        shot(state, action) {
             let { fieldIndex } = action.payload;
 
             if (state.nextPlayer === fieldIndex) {
-                cellSelectedFn(state, action);
-                updateNextMovesFn(state, action)
-                drawBorderFn(state, action)
-                updateAvailableMovesFn(state, action)
-                generateNextMovesFn(state, action);
-                generateNextMoveFn(state, action)
+
+                let changes = {
+                    cells: [],
+                };
+
+                state.nextPlayer = shotFn({ ...action.payload, ...changes });
+                updateNextMovesFn(action.payload)
+                drawBorderFn({ ...action.payload, ...changes })
+                updateAvailableMovesFn(action.payload)
+                generateNextMovesFn(action.payload);
+                state.nextMove[fieldIndex] = generateNextMoveFn(action.payload)
+
+                for (let i = 0; i < changes.cells.length; i++) {
+                    let cell = changes.cells[i]
+                    state.fields[fieldIndex][cell.x][cell.y].type = cell.type
+                }
             }
         }
     },
 })
 
-export const { drawBorder, cellSelected } = gameSlice.actions
+export const { drawBorder, shot } = gameSlice.actions
 
 export default configureStore({
     reducer: {

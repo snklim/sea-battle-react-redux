@@ -44,10 +44,6 @@
   background-color: brown;
 }
 
-.cell:hover {
-  background-color: green;
-}
-
 .cell-ship {
   background-color: gray;
 }
