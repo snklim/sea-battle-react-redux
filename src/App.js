@@ -2,10 +2,12 @@ import './App.css';
 import classNames from 'classnames';
 import { useEffect, Fragment } from 'react';
 import { useSelector, useDispatch, } from 'react-redux';
-import { shot } from './store';
+import { start, move } from './store';
 
 function Cell({ row, column, index }) {
   let field = useSelector(state => state.game.fields[index]);
+  let nextPlayer = useSelector(state => state.game.nextPlayer);
+  let prevMove = useSelector(state => state.game.prevMove[index]);
   let cell = field[row][column];
 
   let className = classNames('cell', 'cell-index-' + row + '-' + column, {
@@ -14,14 +16,15 @@ function Cell({ row, column, index }) {
     'cell-missed': cell.type === 'X',
     'cell-injured': cell.type === 'I',
     'cell-killed': cell.type === 'K',
+    'cell-next-move': row === prevMove.x && column === prevMove.y && cell.type !== 'K',
   });
 
   let dispatch = useDispatch();
 
   return (
     <div className={className} onClick={() => {
-      if (index === 1) {
-        dispatch(shot({ x: cell.x, y: cell.y, fieldIndex: index }));
+      if (nextPlayer === 1) {
+        dispatch(move({ x: cell.x, y: cell.y, fieldIndex: index }));
       }
     }}></div>
   );
@@ -29,15 +32,16 @@ function Cell({ row, column, index }) {
 
 function Bot() {
   let nextMove = useSelector(state => state.game.nextMove[0]);
+  let nextPlayer = useSelector(state => state.game.nextPlayer);
   let dispatch = useDispatch();
 
   useEffect(() => {
     let interval = setInterval(() => {
-      if (!!nextMove)
-        dispatch(shot({ x: nextMove.x, y: nextMove.y, fieldIndex: 0 }));
+      if (!!nextMove && nextPlayer === 0)
+        dispatch(move({ x: nextMove.x, y: nextMove.y, fieldIndex: 0 }));
     }, 500);
     return () => clearInterval(interval);
-  }, [dispatch, nextMove]);
+  }, [dispatch, nextMove, nextPlayer]);
 
   return (<Fragment></Fragment>);
 }
@@ -52,6 +56,7 @@ function Row({ index, children }) {
 
 function Info() {
   let nextPlayer = useSelector(state => state.game.nextPlayer);
+  let status = useSelector(state => state.game.status);
 
   return (
     <Fragment>
@@ -86,23 +91,29 @@ function Field({ index }) {
 
 function Game() {
   return (
-    <div className='game'>
+    <Fragment>
       <Row>
         <Info></Info>
       </Row>
       <Field index={0}></Field>
       <Field index={1}></Field>
-      <Row>
-        <button onClick={() => console.log('New game')}>New game</button>
-      </Row>
       <Bot></Bot>
-    </div>
+    </Fragment>
   );
 }
 
 function App() {
+  let dispatch = useDispatch();
+  let status = useSelector(state => state.game.status);
   return (
-    <Game></Game>
+    <div className='game'>
+      {status === -1 && (<Fragment><Game></Game><Row></Row></Fragment>)}
+      {status === 0 && (<span>You lose</span>)}
+      {status === 1 && (<span>You win</span>)}
+      {(status === -2 || status > -1) && (<Row>
+        <button onClick={() => dispatch(start())}>New game</button>
+      </Row>)}
+    </div>
   );
 }
 

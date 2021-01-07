@@ -52,6 +52,10 @@
   background-color: rgb(0, 132, 255);
 }
 
+.cell-next-move {
+  background-color:blueviolet;
+}
+
 .row {
   clear: both;
 }
