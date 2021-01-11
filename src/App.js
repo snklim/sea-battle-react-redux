@@ -60,8 +60,10 @@ function Info() {
 
   return (
     <Fragment>
-      {nextPlayer === 1 && <Row><span>Your turn</span></Row>}
-      {nextPlayer !== 1 && <Row><span>Opponent turn</span></Row>}
+      {status === -1 && nextPlayer === 1 && <Row><span>Your turn</span></Row>}
+      {status === -1 && nextPlayer !== 1 && <Row><span>Opponent turn</span></Row>}
+      {status === 0 && (<span>You lose</span>)}
+      {status === 1 && (<span>You win</span>)}
     </Fragment>
   );
 }
@@ -105,12 +107,13 @@ function Game() {
 function App() {
   let dispatch = useDispatch();
   let status = useSelector(state => state.game.status);
+
+  useEffect(() => { if (status === -2) dispatch(start()) })
+
   return (
     <div className='game'>
-      {status === -1 && (<Fragment><Game></Game><Row></Row></Fragment>)}
-      {status === 0 && (<span>You lose</span>)}
-      {status === 1 && (<span>You win</span>)}
-      {(status === -2 || status > -1) && (<Row>
+      {status >= -1 && (<Fragment><Game></Game><Row></Row></Fragment>)}
+      {status > -1 && (<Row>
         <button onClick={() => dispatch(start())}>New game</button>
       </Row>)}
     </div>

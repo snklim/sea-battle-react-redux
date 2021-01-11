@@ -34,7 +34,7 @@ const gameSlice = createSlice({
     extraReducers: {
         [start.fulfilled]: (state, action) => {
 
-            let { nextMove, fields } = action.payload;
+            let { nextPlayer, nextMove, fields } = action.payload;
 
             state.fields = [[], []];
             state.nextPlayer = 1;
@@ -43,6 +43,8 @@ const gameSlice = createSlice({
             state.availableShips = [10, 10];
 
             state.status = -1;
+
+            state.nextPlayer = nextPlayer;
 
             state.nextMove[0] = nextMove[0];
             state.nextMove[1] = nextMove[1];
