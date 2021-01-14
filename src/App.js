@@ -1,12 +1,14 @@
 import './App.css';
 import classNames from 'classnames';
-import { useEffect, Fragment } from 'react';
+import { useEffect, useState, Fragment } from 'react';
 import { useSelector, useDispatch, } from 'react-redux';
-import { start, move } from './store';
+import { start, start1, move, move1, sendMessage } from './store';
 
 function Cell({ row, column, index }) {
   let field = useSelector(state => state.game.fields[index]);
   let nextPlayer = useSelector(state => state.game.nextPlayer);
+  let player = useSelector(state => state.game.player);
+  let name = useSelector(state => state.game.name);
   let prevMove = useSelector(state => state.game.prevMove[index]);
   let cell = field[row][column];
 
@@ -23,8 +25,8 @@ function Cell({ row, column, index }) {
 
   return (
     <div className={className} onClick={() => {
-      if (nextPlayer === 1) {
-        dispatch(move({ x: cell.x, y: cell.y, fieldIndex: index }));
+      if (nextPlayer === player && index === 1) {
+        dispatch(move1({ x: cell.x, y: cell.y, player: player, name: name }));
       }
     }}></div>
   );
@@ -37,8 +39,10 @@ function Bot() {
 
   useEffect(() => {
     let interval = setInterval(() => {
-      if (!!nextMove && nextPlayer === 0)
-        dispatch(move({ x: nextMove.x, y: nextMove.y, fieldIndex: 0 }));
+      if (!!nextMove && nextPlayer === 0) {
+        dispatch(move1({ x: nextMove.x, y: nextMove.y, fieldIndex: 0 }));
+        // dispatch(sendMessage({ user: 'mrx', message: new Date().toISOString() }));
+      }
     }, 500);
     return () => clearInterval(interval);
   }, [dispatch, nextMove, nextPlayer]);
@@ -56,12 +60,13 @@ function Row({ index, children }) {
 
 function Info() {
   let nextPlayer = useSelector(state => state.game.nextPlayer);
+  let player = useSelector(state => state.game.player);
   let status = useSelector(state => state.game.status);
 
   return (
     <Fragment>
-      {status === -1 && nextPlayer === 1 && <Row><span>Your turn</span></Row>}
-      {status === -1 && nextPlayer !== 1 && <Row><span>Opponent turn</span></Row>}
+      {status === -1 && nextPlayer === player && <Row><span>Your turn</span></Row>}
+      {status === -1 && nextPlayer !== player && <Row><span>Opponent turn</span></Row>}
       {status === 0 && (<span>You lose</span>)}
       {status === 1 && (<span>You win</span>)}
     </Fragment>
@@ -99,7 +104,7 @@ function Game() {
       </Row>
       <Field index={0}></Field>
       <Field index={1}></Field>
-      <Bot></Bot>
+      {/* <Bot></Bot> */}
     </Fragment>
   );
 }
@@ -108,13 +113,14 @@ function App() {
   let dispatch = useDispatch();
   let status = useSelector(state => state.game.status);
 
-  useEffect(() => { if (status === -2) dispatch(start()) })
+  let [name, setName] = useState('qwerty')
 
   return (
     <div className='game'>
       {status >= -1 && (<Fragment><Game></Game><Row></Row></Fragment>)}
-      {status > -1 && (<Row>
-        <button onClick={() => dispatch(start())}>New game</button>
+      {status !== -1 && (<Row>
+        <input type='text' onChange={e => setName(e.target.value)} value={name}></input>
+        <button onClick={() => dispatch(start1(name))}>New game</button>
       </Row>)}
     </div>
   );
