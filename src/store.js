@@ -1,5 +1,5 @@
 import { createSlice, configureStore, createAsyncThunk } from '@reduxjs/toolkit';
-import { withCallbacks, signalMiddleware } from 'redux-signalr'
+import { withCallbacks, signalMiddleware, LogLevel } from 'redux-signalr'
 import { HubConnectionBuilder, HttpTransportType } from '@microsoft/signalr';
 
 const initialState = {
@@ -14,8 +14,8 @@ const initialState = {
 }
 
 const connection = new HubConnectionBuilder()
-    //.configureLogging(LogLevel.Debug)
-    .withUrl('https://localhost:44375/hubs/chat?game=1', {
+    .configureLogging(LogLevel.Debug)
+    .withUrl('https://localhost:44375/hubs/chat', {
         skipNegotiation: true,
         transport: HttpTransportType.WebSockets,
     })
@@ -123,8 +123,8 @@ const callbacks = withCallbacks()
     .add('Started', (data) => (dispatch) => {
         dispatch(started(data));
     })
-    .add('Moved', (data) => (dispatch) => {
-        dispatch(moved(data));
+    .add('Moved', (data, fieldIndex) => (dispatch) => {
+        dispatch(moved({ ...data, fieldIndex }));
     })
 
 const signal = signalMiddleware({
