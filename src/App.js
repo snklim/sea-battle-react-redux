@@ -1,8 +1,8 @@
 import './App.css';
 import classNames from 'classnames';
-import { useEffect, useState, Fragment } from 'react';
+import { useState, Fragment } from 'react';
 import { useSelector, useDispatch, } from 'react-redux';
-import { start, start1, move, move1, sendMessage } from './store';
+import { start1, move1, } from './store';
 
 function Cell({ row, column, index }) {
   let field = useSelector(state => state.game.fields[index]);
@@ -32,24 +32,6 @@ function Cell({ row, column, index }) {
   );
 }
 
-function Bot() {
-  let nextMove = useSelector(state => state.game.nextMove[0]);
-  let nextPlayer = useSelector(state => state.game.nextPlayer);
-  let dispatch = useDispatch();
-
-  useEffect(() => {
-    let interval = setInterval(() => {
-      if (!!nextMove && nextPlayer === 0) {
-        dispatch(move1({ x: nextMove.x, y: nextMove.y, fieldIndex: 0 }));
-        // dispatch(sendMessage({ user: 'mrx', message: new Date().toISOString() }));
-      }
-    }, 500);
-    return () => clearInterval(interval);
-  }, [dispatch, nextMove, nextPlayer]);
-
-  return (<Fragment></Fragment>);
-}
-
 function Row({ index, children }) {
   let className = classNames('row', 'row-index-' + index);
 
@@ -67,8 +49,8 @@ function Info() {
     <Fragment>
       {status === -1 && nextPlayer === player && <Row><span>Your turn</span></Row>}
       {status === -1 && nextPlayer !== player && <Row><span>Opponent turn</span></Row>}
-      {status === 0 && (<span>You lose</span>)}
-      {status === 1 && (<span>You win</span>)}
+      {status > -1 && status !== player && (<span>You lose</span>)}
+      {status > -1 && status === player && (<span>You win</span>)}
     </Fragment>
   );
 }
@@ -104,7 +86,6 @@ function Game() {
       </Row>
       <Field index={0}></Field>
       <Field index={1}></Field>
-      {/* <Bot></Bot> */}
     </Fragment>
   );
 }
@@ -114,13 +95,15 @@ function App() {
   let status = useSelector(state => state.game.status);
 
   let [name, setName] = useState('qwerty')
+  let [playWithBot, setPlayWithBot] = useState(false)
 
   return (
     <div className='game'>
       {status >= -1 && (<Fragment><Game></Game><Row></Row></Fragment>)}
       {status !== -1 && (<Row>
         <input type='text' onChange={e => setName(e.target.value)} value={name}></input>
-        <button onClick={() => dispatch(start1(name))}>New game</button>
+        <input type='checkbox' onChange={e => setPlayWithBot(e.target.checked)} checked={playWithBot}></input>
+        <button onClick={() => dispatch(start1({ name, playWithBot }))}>New game</button>
       </Row>)}
     </div>
   );

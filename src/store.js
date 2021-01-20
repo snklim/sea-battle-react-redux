@@ -15,7 +15,7 @@ const initialState = {
 
 const connection = new HubConnectionBuilder()
     .configureLogging(LogLevel.Debug)
-    .withUrl('https://localhost:44375/hubs/chat', {
+    .withUrl('https://localhost:49157/hubs/chat', {
         skipNegotiation: true,
         transport: HttpTransportType.WebSockets,
     })
@@ -42,8 +42,8 @@ export const sendMessage = (txt) => (dispatch, getState, invoke) => {
     invoke('SendMessage', txt)
 };
 
-export const start1 = (name) => (dispatch, getState, invoke) => {
-    invoke('Start', name)
+export const start1 = (request) => (dispatch, getState, invoke) => {
+    invoke('Start', request)
 };
 
 export const move1 = (move) => (dispatch, getState, invoke) => {
